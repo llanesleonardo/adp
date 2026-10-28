@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Choose a password · {{ organization }}{% endblock %}
+{% block content %}
+<section class="narrow card">
+  <h1>Choose a new password</h1>
+  <form method="post" action="/reset-password/{{ token }}" class="stack">
+    <label>New password <input name="password" type="password" minlength="12" required autocomplete="new-password"></label>
+    <button type="submit">Update password</button>
+  </form>
+</section>
+{% endblock %}

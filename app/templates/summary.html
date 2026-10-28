@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Public summary draft · {{ summary.title or "Untitled" }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/documents/{{ document.id }}">Private page</a> <span>/</span> <span>Public summary</span></p>
+<div class="page-head">
+  <div>
+    <h1>Public summary</h1>
+    <p class="lede">The private article and the public summary are stored separately. Readers outside the library see only an approved snapshot.</p>
+  </div>
+</div>
+<div class="who">
+  <span class="stamp {{ summary.status }}">{{ summary.status|label }}</span>
+  {% if summary.ai_generated %}<span class="stamp ai">AI-generated draft</span>{% endif %}
+  {% if summary.outdated %}<span class="stamp warn">Private source changed — summary may be outdated</span>{% endif %}
+  <span>Working version {{ summary.version_number }}</span>
+  <span>Source document version {{ summary.source_document_version }} (current private version {{ document.version }})</span>
+  {% if approver %}<span>Approved by {{ approver }} at {{ summary.approved_at }}</span>{% else %}<span>Not approved</span>{% endif %}
+  {% if can.approve %}
+  <span>You can approve, publish, or unpublish this summary.</span>
+  {% elif can.edit %}
+  <span>You can edit the draft. A super admin must approve it before it is public or emailed.</span>
+  {% endif %}
+  {% if can.send_email %}
+  <span>You can send an approved version by email.</span>
+  {% else %}
+  <span>You cannot send this by email.</span>
+  {% endif %}
+</div>
+<div class="grid">
+  <section class="card private-pane">
+    <p class="stamp private">Private source</p>
+    <h2>{{ document.title }}</h2>
+    <p class="meta">Version {{ document.version }} · not included in the public preview</p>
+    <div class="prose">{{ document.body|md }}</div>
+    {% if sources %}
+    <h3>Private sources</h3>
+    <ul>{% for source in sources %}<li>{{ source.label }} — {{ source.url }}</li>{% endfor %}</ul>
+    {% endif %}
+  </section>
+  <section class="card">
+    <p class="stamp public">Public summary draft</p>
+    <form method="post" action="/summaries/{{ summary.id }}/save" class="stack">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label>Public title <input name="title" value="{{ summary.title }}" required></label>
+      <label>Public summary <textarea name="body" rows="16">{{ summary.body }}</textarea></label>
+      <label>Approved public diagram or article URL
+        <input name="public_asset_url" value="{{ summary.public_asset_url or '' }}" placeholder="https://">
+      </label>
+      <button type="submit">Save draft</button>
+    </form>
+    <div class="row">
+      {% if summary.status == "draft" %}
+      <form method="post" action="/summaries/{{ summary.id }}/submit">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button type="submit" class="ghost">Submit for review</button>
+      </form>
+      {% endif %}
+      {% if can.approve and summary.status == "ready_for_review" %}
+      <form method="post" action="/summaries/{{ summary.id }}/approve">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button type="submit">Approve for public sharing</button>
+      </form>
+      {% endif %}
+      {% if can.approve and summary.publicly_listed %}
+      <form method="post" action="/summaries/{{ summary.id }}/unpublish">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button type="submit" class="danger">Unpublish</button>
+      </form>
+      {% endif %}
+    </div>
+  </section>
+</div>
+<section class="card preview">
+  <h2>What a public reader sees</h2>
+  {% if snapshot and summary.publicly_listed %}
+  <p class="stamp public">Approved version {{ snapshot.version_number }} is live</p>
+  {% if summary.status != "approved" %}
+  <p class="banner warn">The draft on the right is not public. The live page still shows the last approved version until a super admin approves the change.</p>
+  {% endif %}
+  <h3>{{ snapshot.title }}</h3>
+  <div class="prose">{{ snapshot.body|md }}</div>
+  {% if snapshot.public_asset_url %}<p><a href="{{ snapshot.public_asset_url }}">Public diagram or article</a></p>{% endif %}
+  {% if summary.slug %}<p><a href="/public/summaries/{{ summary.slug }}">Open the public page</a></p>{% endif %}
+  {% else %}
+  <p class="stamp draft">Draft preview only — a public reader cannot see this yet</p>
+  <h3>{{ summary.title }}</h3>
+  <div class="prose">{{ summary.body|md }}</div>
+  {% endif %}
+</section>
+{% endblock %}

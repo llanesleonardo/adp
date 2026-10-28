@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% from "icons.html" import favorite_button %}
+{% block title %}{{ document.title }} · Private{% endblock %}
+{% block content %}
+<div class="detail">
+  <div class="detail-main">
+    <p class="crumbs"><a href="/patterns">Explore Patterns</a> <span>/</span> <a href="/patterns/{{ category.slug }}">{{ category.title }}</a> <span>/</span> <span>{{ document.title }}</span></p>
+    <div class="detail-head">
+      <div>
+        <h1>{{ document.title }}</h1>
+        <p class="lede">Private knowledge. Version {{ document.version }} · {{ document.status|label }}. Only signed-in users who may read this page can see it.</p>
+        <div class="pills">
+          <span class="pill private">Private knowledge</span>
+          <a class="pill" href="/patterns/{{ category.slug }}">{{ category.title }}</a>
+          <span class="pill">{{ document.status|label }}</span>
+          <span class="pill muted">Version {{ document.version }}</span>
+        </div>
+      </div>
+      <div class="detail-actions">
+        <form method="post" action="/documents/{{ document.id }}/favorite" class="favorite-form">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          {{ favorite_button(favorite) }}
+        </form>
+        {% if can.edit and document.status != "published" %}
+        <form method="post" action="/documents/{{ document.id }}/publish">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <button type="submit">Publish</button>
+        </form>
+        {% elif can.edit %}
+        <form method="post" action="/documents/{{ document.id }}/unpublish">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <button type="submit" class="ghost">Unpublish</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    <article class="card prose-card">
+      <div class="prose">{{ document.body|md }}</div>
+    </article>
+    {% if sources %}
+    <section class="card">
+      <h2>Private sources</h2>
+      <p class="meta">These links stay on the private page. They are not copied into a public summary or an email.</p>
+      <ul class="source-list">
+        {% for source in sources %}
+        <li><strong>{{ source.label }}</strong><span>{{ source.url }}</span></li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+    {% if can.edit %}
+    <section class="card">
+      <h2>Edit page</h2>
+      <form method="post" action="/documents/{{ document.id }}/save" class="stack">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label>Title <input name="title" value="{{ document.title }}" required></label>
+        <label>Category
+          <select name="category">
+            {% for item in categories %}
+            <option value="{{ item.slug }}" {% if item.slug == document.category %}selected{% endif %}>{{ item.title }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Article <textarea name="body" rows="14">{{ document.body }}</textarea></label>
+        <button type="submit">Save private article</button>
+      </form>
+    </section>
+    <section class="card">
+      <h2>Add a private source</h2>
+      <form method="post" action="/documents/{{ document.id }}/sources" class="stack">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label>Label <input name="label" required></label>
+        <label>Private URL <input name="url" required></label>
+        <button type="submit" class="ghost">Attach source</button>
+      </form>
+    </section>
+    {% endif %}
+  </div>
+  <aside class="rail">
+    <section class="assistant">
+      <h2>Who can act</h2>
+      {% if can.edit %}
+      <p>You can edit this private page and draft a public summary.</p>
+      {% else %}
+      <p>You can read this published page. Editing, approval, and email are not available to viewers.</p>
+      {% endif %}
+      <p>A super admin approves public summaries and sends email.</p>
+    </section>
+    {% if can.edit %}
+    <section class="card">
+      <h2>Public summary</h2>
+      <p>A public summary is a separate document. Creating one does not publish the private page or send email.</p>
+      <form method="post" action="/documents/{{ document.id }}/summaries/manual">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button type="submit">Create public summary</button>
+      </form>
+      <form method="post" action="/documents/{{ document.id }}/summaries/generate">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button type="submit" class="ghost">Create public summary with AI draft</button>
+      </form>
+      {% if summaries %}
+      <ul class="index">
+        {% for summary in summaries %}
+        <li>
+          <a href="/summaries/{{ summary.id }}">{{ summary.title or "Untitled summary" }}</a>
+          <span class="stamp {{ summary.status }}">{{ summary.status|label }}</span>
+          {% if summary.ai_generated %}<span class="stamp ai">AI draft</span>{% endif %}
+          {% if summary.outdated %}<span class="stamp warn">Possibly outdated</span>{% endif %}
+          <span class="meta">Summary version {{ summary.version_number }} · source version {{ summary.source_document_version }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </section>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

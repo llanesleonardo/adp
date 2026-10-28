@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Email{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Email campaigns</h1>
+    <p class="lede">Sending stays off until a super admin sets the address and service in Settings. Nothing is emailed when a page, summary, or ingestion job changes.</p>
+  </div>
+  <a class="button" href="/campaigns/new">New campaign</a>
+</div>
+{% if not can.send_email %}
+<p class="banner warn">You can prepare a draft. A super admin must grant you send permission, or send it themselves.</p>
+{% endif %}
+<ul class="index">
+  {% for campaign in campaigns %}
+  <li>
+    <a href="/campaigns/{{ campaign.id }}">{{ campaign.subject }}</a>
+    <span class="stamp {{ campaign.status }}">{{ campaign.status|label }}</span>
+    <span class="meta">{{ campaign.email_type }} · versions {{ campaign.summary_version_ids }}</span>
+  </li>
+  {% else %}
+  <li>No campaigns yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

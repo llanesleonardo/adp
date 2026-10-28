@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Confirm subscription{% endblock %}
+{% block content %}
+<section class="narrow card">
+  <h1>Confirm subscription</h1>
+  {% if notice %}
+  <p>You can close this page.</p>
+  {% else %}
+  <form method="post" action="/confirm/{{ token }}">
+    <button type="submit">Confirm my subscription</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Exercises · {{ organization }}{% endblock %}
+{% block content %}
+<p class="eyebrow">Practice</p>
+<h1>Exercises</h1>
+<p class="lede">Every exercise is listed here. Each one names the patterns it tackles, and the technology when the case uses one.</p>
+{% if exercises %}
+<div class="knowledge-grid">
+  {% for exercise, attempt, patterns, technologies in exercises %}
+  <a class="kcard" href="/exercises/{{ exercise.id }}">
+    <div class="kcard-art art-{{ loop.cycle('a', 'b', 'c') }}" aria-hidden="true"></div>
+    <div class="kcard-body">
+      <div class="pills">
+        {% if exercise.kind == 'practice' %}<span class="pill">Match and questions</span>{% elif exercise.kind == 'diagram' %}<span class="pill">Build the diagram</span>{% else %}<span class="pill">Prompt</span>{% endif %}
+        {% if attempt and attempt.status == 'started' %}<span class="pill muted">Started</span>{% endif %}
+        {% for technology in technologies %}<span class="pill public">{{ technology }}</span>{% endfor %}
+      </div>
+      <h3>{{ exercise.title }}</h3>
+      {% if patterns %}
+      <p>{% if patterns|length == 1 %}Pattern{% else %}Patterns{% endif %}: {% for pattern in patterns %}{{ pattern.name }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+      {% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<section class="card"><p>No exercises yet.</p></section>
+{% endif %}
+{% if can.edit %}
+<section class="card">
+  <h2>New exercise</h2>
+  <form method="post" action="/exercises" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Title <input name="title" required maxlength="300"></label>
+    <label>Prompt <textarea name="prompt" rows="6" placeholder="What should the reader practice?"></textarea></label>
+    <button type="submit">Create exercise</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

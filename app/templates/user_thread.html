@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ thread.title }} · {{ subject.email }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/users">Users</a> <span>/</span> <a href="/users/{{ subject.id }}">{{ subject.email }}</a> <span>/</span> <span>{{ thread.title }}</span></p>
+<p class="eyebrow">Customer dashboard</p>
+<h1>{{ thread.title }}</h1>
+<p class="lede">Questions {{ subject.email }} asked the assistant.</p>
+<ol class="thread">
+  {% for message in messages %}
+  <li class="card message-{{ message.role }}" id="message-{{ message.id }}">
+    <p class="eyebrow">{{ subject.email if message.role == "user" else "Assistant" }}</p>
+    <div class="prose">{{ message.body|md }}</div>
+  </li>
+  {% endfor %}
+</ol>
+{% endblock %}

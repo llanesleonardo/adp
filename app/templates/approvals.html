@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Approval queue{% endblock %}
+{% block content %}
+<h1>Summary approval queue</h1>
+<p class="lede">Only a super admin can approve a summary for public sharing, publish it, or unpublish it.</p>
+{% if summaries %}
+<ul class="index">
+  {% for summary in summaries %}
+  <li>
+    <a href="/summaries/{{ summary.id }}">{{ summary.title }}</a>
+    <span class="stamp ready_for_review">Ready for review</span>
+    {% if summary.ai_generated %}<span class="stamp ai">AI draft</span>{% endif %}
+    <span class="meta">Version {{ summary.version_number }}</span>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>Nothing is waiting for review.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Prompt Marketplace · {{ organization }}{% endblock %}
+{% block content %}
+<p class="eyebrow">Marketplace</p>
+<h1>Prompt Marketplace</h1>
+<p class="lede">Prompts that build documentation, examples, risks, and diagrams, and prompts that apply one pattern to your code. This section stays separate from exercises.</p>
+<div class="knowledge-grid">
+  {% for prompt in prompts %}
+  <a class="kcard" href="/prompts/{{ prompt.slug }}">
+    <div class="kcard-art art-{{ loop.cycle('a', 'b', 'c') }}" aria-hidden="true"></div>
+    <div class="kcard-body">
+      <h3>{{ prompt.title }}</h3>
+      <p>{{ prompt.blurb }}</p>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+<section class="card">
+  <h2>Your prompts</h2>
+  {% if uses %}
+  <ul class="activity-list">
+    {% for use, pattern in uses %}
+    <li>
+      <a href="/prompts/runs/{{ use.id }}">{{ pattern.name }}</a>
+      <span class="meta">{{ use.slug }} · {{ use.created_at.strftime("%Y-%m-%d %H:%M UTC") }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="meta">You have not built a prompt yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

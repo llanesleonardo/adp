@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ concern.title }} · {{ pattern.name }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/patterns">Explore Patterns</a> <span>/</span> <a href="/patterns/{{ category.slug }}">{{ category.title }}</a> <span>/</span> <a href="/patterns/{{ category.slug }}/{{ pattern.id }}">{{ pattern.name }}</a> <span>/</span> <span>{{ concern.title }}</span></p>
+<div class="pills">
+  <span class="pill">Design concern</span>
+  <span class="pill muted">{{ pattern.name }}</span>
+</div>
+<article class="card concern-body">
+  {{ concern_html }}
+  {% if concern.source_url %}<p class="meta"><a href="{{ concern.source_url }}">Source</a></p>{% endif %}
+</article>
+{% endblock %}

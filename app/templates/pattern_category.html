@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ category.title }} · Explore Patterns{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/patterns">Explore Patterns</a> <span>/</span> <span>{{ category.title }}</span></p>
+<h1>{{ category.title }}</h1>
+<p class="lede">{{ category.summary }}</p>
+{% if patterns or documents %}
+<div class="knowledge-grid">
+  {% for pattern in patterns %}
+  <a class="kcard" href="/patterns/{{ category.slug }}/{{ pattern.id }}">
+    <div class="kcard-art art-{{ loop.cycle('a', 'b', 'c') }}" aria-hidden="true"></div>
+    <div class="kcard-body">
+      <div class="pills">
+        <span class="pill">{{ category.title }}</span>
+        {% if pattern.subcategory %}<span class="pill muted">{{ pattern.subcategory }}</span>{% endif %}
+      </div>
+      <h3>{{ pattern.name }}</h3>
+    </div>
+  </a>
+  {% endfor %}
+  {% for document in documents %}
+  <a class="kcard" href="/documents/{{ document.id }}">
+    <div class="kcard-art art-{{ loop.cycle('a', 'b', 'c') }}" aria-hidden="true"></div>
+    <div class="kcard-body">
+      <div class="pills">
+        <span class="pill">{{ category.title }}</span>
+        <span class="pill muted">{{ document.status|label }}</span>
+      </div>
+      <h3>{{ document.title }}</h3>
+      <p>{{ document.body.split('\n')[0][:140] }}</p>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<section class="card"><p>No patterns in this category yet.</p></section>
+{% endif %}
+{% endblock %}

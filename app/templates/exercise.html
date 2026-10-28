@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "icons.html" import favorite_button %}
+{% block title %}{{ exercise.title }} · Exercises{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/exercises">Exercises</a> <span>/</span> <span>{{ exercise.title }}</span></p>
+<div class="pills">
+  {% if exercise.kind == 'practice' %}<span class="pill">Match and questions</span>{% elif exercise.kind == 'diagram' %}<span class="pill">Build the diagram</span>{% endif %}
+  {% if attempt and attempt.status == "started" %}
+  <span class="pill">Started {{ attempt.started_at.strftime("%Y-%m-%d %H:%M UTC") }}</span>
+  {% else %}
+  <span class="pill muted">Not started</span>
+  {% endif %}
+  <form method="post" action="/exercises/{{ exercise.id }}/favorite" class="favorite-form">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    {{ favorite_button(favorite) }}
+  </form>
+</div>
+<h1>{{ exercise.title }}</h1>
+{% if practice or diagram %}
+<p class="lede">{% if diagram %}{{ diagram.prompt }} The parts stay in place. Draw the lines that build the diagram.{% else %}{{ practice.matchPrompt }} Draw a line from each card on the left to its match, then answer the questions.{% endif %}</p>
+<div id="exercise-root" data-id="{{ exercise.id }}" data-csrf="{{ csrf }}"></div>
+<script id="exercise-spec" type="application/json">{{ (diagram or practice)|tojson }}</script>
+<link rel="stylesheet" href="/static/exercise/exercise.css">
+<script type="module" src="/static/exercise/exercise.js"></script>
+{% else %}
+<article class="card">
+  <div class="prose">{{ exercise.prompt|md }}</div>
+</article>
+{% endif %}
+{% if not attempt or attempt.status != "started" %}
+<form method="post" action="/exercises/{{ exercise.id }}/start">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <button type="submit">Start exercise</button>
+</form>
+{% else %}
+<p class="meta">This exercise is on your dashboard.</p>
+{% endif %}
+<section class="card" id="exercise-result">
+  <h2>Result</h2>
+  <p>{{ report.summary }}</p>
+  {% if report.lines %}
+  <ul>
+    {% for line in report.lines %}<li>{{ line }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+  {% if report.questions %}
+  <ul>
+    {% for question in report.questions %}
+    <li>{{ question.prompt }} — {{ question.choice }}{% if question.ok %} (Correct){% else %} (Try again){% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  <p><a class="button" href="/exercises/{{ exercise.id }}/result.pdf">Export PDF</a></p>
+</section>
+<section class="card" id="exercise-notes">
+  <h2>Notes</h2>
+  <form method="post" action="/exercises/{{ exercise.id }}/notes" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Your notes
+      <textarea name="body" rows="5" maxlength="4000" placeholder="Comments you want to keep with this exercise.">{{ note.body if note else "" }}</textarea>
+    </label>
+    <p><button type="submit">Save notes</button></p>
+  </form>
+</section>
+{% endblock %}

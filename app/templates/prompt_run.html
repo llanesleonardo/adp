@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ prompt.title }} · {{ pattern.name }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/prompts">Prompt Marketplace</a> <span>/</span> <a href="/prompts/{{ prompt.slug }}">{{ prompt.title }}</a> <span>/</span> <span>{{ pattern.name }}</span></p>
+<div class="pills">
+  <span class="pill">{{ prompt.title }}</span>
+  <a class="pill" href="/patterns/{{ pattern.category_slug }}/{{ pattern.id }}">{{ pattern.name }}</a>
+</div>
+<h1>{{ prompt.title }} for {{ pattern.name }}</h1>
+<p class="lede">{{ prompt.produces }} Copy this prompt and use it with the assistant or the model you trust.</p>
+<p><button type="button" class="ghost" id="copy-prompt">Copy prompt</button></p>
+<pre class="prompt-box" id="prompt-text">{{ use.body }}</pre>
+<script src="/static/copy.js"></script>
+{% endblock %}

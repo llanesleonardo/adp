@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Ask AI · {{ organization }}{% endblock %}
+{% block content %}
+<p class="eyebrow">Assistant</p>
+<h1>Ask AI</h1>
+<p class="lede">Each question starts a thread. Answers use only the private pages your role can read.</p>
+<form method="post" action="/ask" class="ask ask-page">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <input name="question" type="search" placeholder="How do I prevent overselling?" aria-label="Ask AI" required maxlength="500">
+  <button type="submit" aria-label="Ask">→</button>
+</form>
+<section class="card">
+  <h2>Newest threads</h2>
+  {% if threads %}
+  <ul class="activity-list">
+    {% for thread in threads %}
+    <li>
+      <a href="/ask/{{ thread.id }}">{{ thread.title }}</a>
+      <span class="meta">{{ thread.updated_at.strftime("%Y-%m-%d %H:%M UTC") }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="meta">No assistant threads yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

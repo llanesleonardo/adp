@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ prompt.title }} · {{ subject.email }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/users">Users</a> <span>/</span> <a href="/users/{{ subject.id }}">{{ subject.email }}</a> <span>/</span> <span>{{ prompt.title }}</span></p>
+<div class="pills">
+  <span class="pill">{{ prompt.title }}</span>
+  <a class="pill" href="/patterns/{{ pattern.category_slug }}/{{ pattern.id }}">{{ pattern.name }}</a>
+</div>
+<p class="eyebrow">Customer dashboard</p>
+<h1>{{ prompt.title }} for {{ pattern.name }}</h1>
+<p class="lede">{{ subject.email }} built this prompt{% if use.focus %} with focus “{{ use.focus }}”{% endif %}.</p>
+<p><button type="button" class="ghost" id="copy-prompt">Copy prompt</button></p>
+<pre class="prompt-box" id="prompt-text">{{ use.body }}</pre>
+<script src="/static/copy.js"></script>
+{% endblock %}

@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}{{ subject.email }} · Users{% endblock %}
+{% block content %}
+<div class="home">
+  <div>
+    <p class="crumbs"><a href="/users">Users</a> <span>/</span> <span>{{ subject.email }}</span></p>
+    <p class="eyebrow">Customer dashboard</p>
+    <h1>{{ subject.email }}</h1>
+    <p class="lede">This dashboard follows {{ subject.email }}. It shows the searches, favorites, exercises, prompts, questions, pages, and ingestion this person has done.</p>
+    <div class="pills">
+      <span class="stamp">{{ subject.role }}</span>
+      {% if subject.is_active %}<span class="pill public">Active</span>{% else %}<span class="pill private">Inactive</span>{% endif %}
+      {% if subject.can_send_public_email %}<span class="pill">Can send public email</span>{% endif %}
+      <span class="pill muted">Joined {{ subject.created_at.strftime("%Y-%m-%d") }}</span>
+    </div>
+    <div class="activity">
+      <section class="card">
+        <h2>Recent searches</h2>
+        {% if activity.searches %}
+        <ul class="activity-list">
+          {% for search in activity.searches %}
+          <li>
+            <span>{{ search.query }}</span>
+            <span class="meta">{{ search.created_at.strftime("%Y-%m-%d %H:%M UTC") }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="meta">No searches yet.</p>
+        {% endif %}
+      </section>
+      <section class="card">
+        <h2>Favorites</h2>
+        {% if activity.favorites %}
+        <ul class="activity-list">
+          {% for item in activity.favorites %}
+          <li>
+            <a href="{{ item.href }}">{{ item.title }}</a>
+            <span class="meta">{{ item.kind }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="meta">No favorites yet.</p>
+        {% endif %}
+      </section>
+      <section class="card">
+        <h2>Exercises</h2>
+        {% if activity.exercises %}
+        <ul class="activity-list">
+          {% for item in activity.exercises %}
+          <li>
+            <a href="/exercises/{{ item.id }}">{{ item.title }}</a>
+            <span class="meta">
+              {% if item.kind == "diagram" %}Build the diagram{% elif item.kind == "practice" %}Match and questions{% else %}Prompt{% endif %}
+              · {{ item.summary }}
+            </span>
+            {% if item.note %}<span class="meta">Note: {{ item.note }}</span>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="meta">No exercises started and no notes saved.</p>
+        {% endif %}
+      </section>
+      <section class="card">
+        <h2>Prompts</h2>
+        {% if activity.prompts %}
+        <ul class="activity-list">
+          {% for item in activity.prompts %}
+          <li>
+            <a href="/users/{{ subject.id }}/prompts/{{ item.id }}">{{ item.title }} for {{ item.pattern }}</a>
+            <span class="meta">{{ item.focus or "No focus" }} · {{ item.created_at.strftime("%Y-%m-%d %H:%M UTC") }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="meta">No prompts built yet.</p>
+        {% endif %}
+      </section>
+      <section class="card">
+        <h2>Questions</h2>
+        {% if activity.threads %}
+        <ul class="activity-list">
+          {% for thread in activity.threads %}
+          <li>
+            <a href="/users/{{ subject.id }}/threads/{{ thread.id }}">{{ thread.title }}</a>
+            <span class="meta">{{ thread.updated_at.strftime("%Y-%m-%d %H:%M UTC") }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="meta">No assistant questions yet.</p>
+        {% endif %}
+      </section>
+      <section class="card">
+        <h2>Pages written</h2>
+        {% if activity.pages %}
+        <ul class="activity-list">
+          {% for page in activity.pages %}
+          <li>
+            <a href="/documents/{{ page.id }}">{{ page.title }}</a>
+            <span class="meta"><span class="stamp {{ page.status }}">{{ page.status }}</span></span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="meta">No private pages written.</p>
+        {% endif %}
+      </section>
+      <section class="card">
+        <h2>Ingestion</h2>
+        {% if activity.ingestion %}
+        <ul class="activity-list">
+          {% for job in activity.ingestion %}
+          <li>
+            {% if job.document_id %}
+            <a href="/documents/{{ job.document_id }}">{{ job.title }}</a>
+            {% else %}
+            <span>{{ job.title }}</span>
+            {% endif %}
+            <span class="meta">{{ job.status|label }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="meta">No pages ingested.</p>
+        {% endif %}
+      </section>
+      <section class="card">
+        <h2>Sent email</h2>
+        {% if activity.sent_emails %}
+        <ul class="activity-list">
+          {% for campaign in activity.sent_emails %}
+          <li>
+            <a href="/campaigns/{{ campaign.id }}">{{ campaign.subject }}</a>
+            <span class="meta">{{ campaign.status|label }}{% if campaign.sent_at %} · {{ campaign.sent_at.strftime("%Y-%m-%d %H:%M UTC") }}{% endif %}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="meta">No email sent.</p>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+  <aside class="rail">
+    <section class="card">
+      <h2>Profile</h2>
+      <p class="role-note">Signed in as <strong>{{ user.role }}</strong>, viewing the library of <strong>{{ subject.email }}</strong>.</p>
+      <form method="post" action="/users/{{ subject.id }}" class="stack">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label>Role
+          <select name="role">
+            {% for role in ["VIEWER", "EDITOR", "EDITOR_PLUS", "SUPER_ADMIN"] %}
+            <option {% if subject.role == role %}selected{% endif %}>{{ role }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" name="is_active" value="yes" {% if subject.is_active %}checked{% endif %}> Active</label>
+        <label class="check"><input type="checkbox" name="can_send_public_email" value="yes" {% if subject.can_send_public_email %}checked{% endif %}> Can send public email</label>
+        <label>Reset password <input name="password" type="password" minlength="12" placeholder="Leave blank to keep"></label>
+        <button type="submit" class="ghost">Save user</button>
+      </form>
+    </section>
+  </aside>
+</div>
+{% endblock %}

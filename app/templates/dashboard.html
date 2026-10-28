@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · {{ organization }}{% endblock %}
+{% block content %}
+<div class="home">
+  <div>
+    <p class="eyebrow">Private library</p>
+    <h1>Explore software knowledge</h1>
+    <p class="lede">Discover patterns and internal guidance you are allowed to read. Public summaries stay separate until a super admin approves them.</p>
+    {% if can.approve and pending %}
+    <p class="banner">{{ pending|length }} public summar{{ "y" if pending|length == 1 else "ies" }} waiting for approval. <a href="/approvals">Open the queue</a></p>
+    {% endif %}
+    {% if can.edit and outdated %}
+    <p class="banner warn">{{ outdated|length }} public summar{{ "y" if outdated|length == 1 else "ies" }} may be outdated because the private source changed.</p>
+    {% endif %}
+    <div class="activity">
+      <section class="card">
+        <h2>Recent searches</h2>
+        {% if searches %}
+        <ul class="activity-list">
+          {% for search in searches %}
+          <li>
+            <a href="/search?q={{ search.query|urlencode }}">{{ search.query }}</a>
+            <span class="meta">{{ search.created_at.strftime("%Y-%m-%d %H:%M UTC") }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="meta">No searches yet.</p>
+        {% endif %}
+      </section>
+      <section class="card">
+        <h2>Favorites</h2>
+        {% if favorites %}
+        <ul class="activity-list">
+          {% for item in favorites %}
+          <li>
+            <a href="{{ item.href }}">{{ item.title }}</a>
+            <span class="meta">{{ item.kind }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="meta">No favorites yet. Favorite an answer, exercise, pattern, or problem to keep it here.</p>
+        {% endif %}
+      </section>
+      <section class="card">
+        <h2>Sent email</h2>
+        {% if sent_emails %}
+        <ul class="activity-list">
+          {% for campaign in sent_emails %}
+          <li>
+            {% if can.draft_email %}
+            <a href="/campaigns/{{ campaign.id }}">{{ campaign.subject }}</a>
+            {% else %}
+            <span>{{ campaign.subject }}</span>
+            {% endif %}
+            <span class="meta">{{ campaign.status|label }}{% if campaign.sent_at %} · {{ campaign.sent_at.strftime("%Y-%m-%d %H:%M UTC") }}{% endif %}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="meta">You have not sent any email.</p>
+        {% endif %}
+      </section>
+      <section class="card">
+        <h2>Prompt marketplace</h2>
+        <ul class="activity-list">
+          {% for prompt in prompts %}
+          <li><a href="/prompts/{{ prompt.slug }}">{{ prompt.title }}</a><span class="meta">{{ prompt.blurb }}</span></li>
+          {% endfor %}
+        </ul>
+      </section>
+      <section class="card">
+        <h2>Started exercises</h2>
+        {% if started_exercises %}
+        <ul class="activity-list">
+          {% for exercise, attempt in started_exercises %}
+          <li>
+            <a href="/exercises/{{ exercise.id }}">{{ exercise.title }}</a>
+            <span class="meta">Started {{ attempt.started_at.strftime("%Y-%m-%d %H:%M UTC") }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="meta">You have not started an exercise. <a href="/exercises">Browse exercises</a></p>
+        {% endif %}
+      </section>
+    </div>
+    {% if can.edit %}
+    <section class="card">
+      <h2>New private page</h2>
+      <form method="post" action="/documents" class="stack">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label>Title <input name="title" required maxlength="300"></label>
+        <label>Category
+          <select name="category">
+            {% for item in categories %}
+            <option value="{{ item.slug }}">{{ item.title }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Article <textarea name="body" rows="8" placeholder="Write the private article in Markdown."></textarea></label>
+        <button type="submit">Create draft</button>
+      </form>
+    </section>
+    {% endif %}
+  </div>
+  <aside class="rail">
+    <section class="assistant">
+      <h2>Ask the knowledge assistant</h2>
+      <p>Search the private pages your role can read. Results never include drafts a viewer is not allowed to see.</p>
+      <form action="/ask" method="post" class="ask">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <input name="question" type="search" placeholder="How does this library work?" aria-label="Ask the knowledge assistant" required maxlength="500">
+        <button type="submit" aria-label="Ask">→</button>
+      </form>
+      <p class="role-note">Signed in as <strong>{{ user.role }}</strong>. Answers use only the pages you can read.</p>
+    </section>
+    <section class="card thread-card">
+      <h2>Newest threads</h2>
+      {% if threads %}
+      <ul class="activity-list">
+        {% for thread in threads %}
+        <li>
+          <a href="/ask/{{ thread.id }}">{{ thread.title }}</a>
+          <span class="meta">{{ thread.updated_at.strftime("%Y-%m-%d %H:%M UTC") }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="meta">No assistant threads yet.</p>
+      {% endif %}
+    </section>
+  </aside>
+</div>
+{% endblock %}

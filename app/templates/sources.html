@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Ingestion · {{ organization }}{% endblock %}
+{% block content %}
+<p class="eyebrow">Library</p>
+<h1>Ingestion</h1>
+<p class="lede">Bring a page into the private library. A source link saved here stays with that page. The sources that validate a pattern are listed on the pattern page.</p>
+{% if can.ingest %}
+<section class="card">
+  <h2>Ingest a page</h2>
+  <form method="post" action="/sources" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Title <input name="title" required maxlength="300"></label>
+    <label>Page <textarea name="body" rows="8" placeholder="The private page to bring in."></textarea></label>
+    <label>Source label <input name="source_label" maxlength="300" placeholder="The publication or note this came from"></label>
+    <label>Source link <input name="source_url" type="url" maxlength="2000" placeholder="https://"></label>
+    <label><input type="checkbox" name="publish" value="yes"> Publish for signed-in readers</label>
+    <p><button type="submit">Ingest</button></p>
+  </form>
+</section>
+{% else %}
+<section class="card">
+  <p>Ingestion is available to editors who can bring pages into the library.</p>
+</section>
+{% endif %}
+<section class="card">
+  <h2>Recent ingestion</h2>
+  {% if jobs %}
+  <ul class="activity-list">
+    {% for job in jobs %}
+    <li>
+      {% if job.document_id %}<a href="/documents/{{ job.document_id }}">{{ job.title }}</a>{% else %}<strong>{{ job.title }}</strong>{% endif %}
+      <span class="meta">{{ job.status|label }}{% if job.source_label %} · {{ job.source_label }}{% endif %}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="meta">No pages have been ingested yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

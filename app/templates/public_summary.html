@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ version.title }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/public">Public</a> <span>/</span> <span>{{ version.title }}</span></p>
+<article class="card public-article">
+  <div class="pills">
+    <span class="pill public">Approved for public sharing</span>
+    <span class="pill muted">Version {{ version.version_number }}{% if summary.published_at %} · Published {{ summary.published_at.strftime("%Y-%m-%d %H:%M UTC") }}{% endif %}</span>
+  </div>
+  <h1>{{ version.title }}</h1>
+  <div class="prose">{{ version.body|md }}</div>
+  {% if version.public_asset_url %}
+  <p><a href="{{ version.public_asset_url }}">Public diagram or article</a></p>
+  {% endif %}
+</article>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Search{% endblock %}
+{% block content %}
+<h1>Search private knowledge</h1>
+<form method="get" action="/search" class="row">
+  <label class="grow">Query <input name="q" value="{{ query }}" required></label>
+  <button type="submit">Search</button>
+</form>
+{% if query %}
+<ul class="index">
+  {% for document in results %}
+  <li><a href="/documents/{{ document.id }}">{{ document.title }}</a> <span class="stamp {{ document.status }}">{{ document.status }}</span></li>
+  {% else %}
+  <li>No matching pages you can access.</li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

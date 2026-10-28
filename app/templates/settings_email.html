@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Email address · Settings{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/settings">Settings</a> <span>/</span> <span>Email address</span></p>
+<h1>Email address</h1>
+<p class="lede">Weekly news, confirmation links, and password resets use this address.</p>
+<section class="card">
+  <form method="post" action="/settings/email" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Sender name <input name="sender_name" value="{{ email_settings.sender_name }}" maxlength="200"></label>
+    <label>Email address <input name="sender_email" type="email" value="{{ email_settings.sender_email }}" placeholder="news@library.test"></label>
+    <label>Public site address <input name="public_base_url" value="{{ email_settings.public_base_url }}" required></label>
+    <label class="check"><input type="checkbox" name="enabled" value="yes" {% if email_settings.enabled %}checked{% endif %}> Sending enabled</label>
+    <button type="submit">Save email address</button>
+  </form>
+</section>
+{% endblock %}

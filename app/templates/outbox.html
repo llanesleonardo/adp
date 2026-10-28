@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Mailbox{% endblock %}
+{% block content %}
+<p class="eyebrow">Administration</p>
+<h1>Mailbox</h1>
+<p class="lede">Messages kept by the local service stay here. The sending address and service are set in <a href="/settings">Settings</a>.</p>
+{% for message in messages %}
+<article class="card">
+  <p class="meta">{{ message.kind }} · {{ message.created_at }} · {{ message.sender }}</p>
+  <h2>{{ message.subject }}</h2>
+  <p>To {{ message.to_email }}</p>
+  <pre>{{ message.text_body }}</pre>
+</article>
+{% else %}
+<p>The mailbox is empty.</p>
+{% endfor %}
+{% endblock %}

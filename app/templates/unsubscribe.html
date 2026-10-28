@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Unsubscribe{% endblock %}
+{% block content %}
+<section class="narrow card">
+  <h1>Unsubscribe</h1>
+  {% if notice %}
+  <p>You will not receive future weekly emails.</p>
+  {% else %}
+  <p>This stops the weekly email. It does not affect a one-to-one share that was already sent.</p>
+  <form method="post" action="/unsubscribe/{{ token }}">
+    <button type="submit">Unsubscribe</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

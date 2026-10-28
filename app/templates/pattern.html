@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% from "icons.html" import favorite_button %}
+{% block title %}{{ pattern.name }} · {{ category.title }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/patterns">Explore Patterns</a> <span>/</span> <a href="/patterns/{{ category.slug }}">{{ category.title }}</a> <span>/</span> <span>{{ pattern.name }}</span></p>
+<div class="pills">
+  <span class="pill">{{ category.title }}</span>
+  {% if pattern.subcategory %}<span class="pill muted">{{ pattern.subcategory }}</span>{% endif %}
+  <form method="post" action="/patterns/{{ category.slug }}/{{ pattern.id }}/favorite" class="favorite-form">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    {{ favorite_button(favorite) }}
+  </form>
+</div>
+<h1>{{ pattern.name }}</h1>
+<section class="card" id="pattern-sources">
+  <h2>Sources</h2>
+  <p class="lede">This pattern's knowledge was taken from these sources. The links stay in the private library.</p>
+  <ul class="source-list">
+    {% if pattern.source_url %}
+    <li><strong>Pattern library</strong><a href="{{ pattern.source_url }}">{{ pattern.source_url }}</a></li>
+    {% endif %}
+    {% if pattern.repository_path %}
+    <li><strong>Library path</strong><span>{{ pattern.repository_path }}</span></li>
+    {% endif %}
+    {% for source in pattern_sources %}
+    <li>
+      <strong>{{ source.label }}</strong>
+      <a href="{{ source.url }}">{{ source.url }}</a>
+      {% if can.edit %}
+      <form method="post" action="/patterns/{{ category.slug }}/{{ pattern.id }}/sources/{{ source.id }}/delete">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button type="submit" class="ghost">Remove</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% if can.edit %}
+  <form method="post" action="/patterns/{{ category.slug }}/{{ pattern.id }}/sources" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Label <input name="label" required maxlength="300" placeholder="Where this note came from"></label>
+    <label>Link <input name="url" type="url" required maxlength="2000" placeholder="https://"></label>
+    <p><button type="submit">Add source</button></p>
+  </form>
+  {% endif %}
+</section>
+{% if show_concerns %}
+<section class="card">
+  <h2>Design concerns</h2>
+  <p class="lede">Concerns to weigh while using this pattern.</p>
+  {% if design_concerns %}
+  <ul class="activity-list">
+    {% for concern in design_concerns %}
+    <li><a href="/patterns/{{ category.slug }}/{{ pattern.id }}/concerns/{{ concern.id }}">{{ concern.title }}</a></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="meta">No design concerns for this pattern yet.</p>
+  {% endif %}
+</section>
+{% endif %}
+<section class="card">
+  <h2>System problems</h2>
+  <p class="lede">Problems from the problem-solving library that use this pattern.</p>
+  {% if related_problems %}
+  <ul class="activity-list">
+    {% for problem in related_problems %}
+    <li><a href="/problems/{{ problem.id }}">{{ problem.title }}</a></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="meta">No system problems linked yet.</p>
+  {% endif %}
+</section>
+<h2>Learning tools</h2>
+<p class="lede">Each pattern can hold videos, exercises, lectures, and later additions of the same kind.</p>
+<div class="tool-grid">
+  {% for section in tool_sections %}
+  <section class="card tool-card">
+    <h3>{{ section.title }}</h3>
+    <p class="meta">{{ section.description }}</p>
+    {% set tools = tools_by_section.get(section.id, []) %}
+    {% if section.slug == 'exercises' and pattern_exercises or tools %}
+    <ul class="activity-list">
+      {% if section.slug == 'exercises' %}
+      {% for exercise in pattern_exercises %}
+      <li><a href="/exercises/{{ exercise.id }}">{{ exercise.title }}</a><span class="meta">{% if exercise.kind == 'diagram' %}Build the diagram{% else %}Match and questions{% endif %}</span></li>
+      {% endfor %}
+      {% endif %}
+      {% for tool in tools %}
+      <li>
+        <strong>{{ tool.title }}</strong>
+        {% if tool.summary %}<span class="meta">{{ tool.summary }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="meta">No {{ section.title|lower }} yet.</p>
+    {% endif %}
+  </section>
+  {% endfor %}
+</div>
+{% if can.edit %}
+<section class="card">
+  <h2>Add a learning tool</h2>
+  <form method="post" action="/patterns/{{ category.slug }}/{{ pattern.id }}/tools" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Type
+      <select name="section">
+        {% for section in tool_sections %}
+        <option value="{{ section.slug }}">{{ section.title }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Title <input name="title" required maxlength="300"></label>
+    <label>Notes <textarea name="summary" rows="4" placeholder="What this video, exercise, or lecture covers."></textarea></label>
+    <button type="submit">Add to this pattern</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

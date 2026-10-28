@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Email service · Settings{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/settings">Settings</a> <span>/</span> <span>Email service</span></p>
+<h1>Email service</h1>
+<p class="lede">The local mailbox keeps messages in this library. SMTP sends through the host below.</p>
+<section class="card">
+  <form method="post" action="/settings/service" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Service
+      <select name="provider">
+        <option value="local" {% if email_settings.provider == "local" %}selected{% endif %}>Local mailbox</option>
+        <option value="smtp" {% if email_settings.provider == "smtp" %}selected{% endif %}>SMTP service</option>
+      </select>
+    </label>
+    <label>Host <input name="smtp_host" value="{{ email_settings.smtp_host }}"></label>
+    <label>Port <input name="smtp_port" value="{{ email_settings.smtp_port }}"></label>
+    <label>Username <input name="smtp_username" value="{{ email_settings.smtp_username }}"></label>
+    <label>Password <input name="smtp_password" type="password" autocomplete="new-password" placeholder="{% if email_settings.smtp_password %}Saved password stays unless replaced{% else %}Not set{% endif %}"></label>
+    <label class="check"><input type="checkbox" name="smtp_use_tls" value="yes" {% if email_settings.smtp_use_tls %}checked{% endif %}> Use TLS</label>
+    <button type="submit">Save email service</button>
+  </form>
+</section>
+{% endblock %}

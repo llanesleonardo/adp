@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "icons.html" import favorite_button %}
+{% block title %}{{ thread.title }} · Ask AI{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/ask">Ask AI</a> <span>/</span> <span>{{ thread.title }}</span></p>
+<h1>{{ thread.title }}</h1>
+<ol class="thread">
+  {% for message in messages %}
+  <li class="card message-{{ message.role }}" id="message-{{ message.id }}">
+    <p class="eyebrow">{{ "You" if message.role == "user" else "Assistant" }}</p>
+    <div class="prose">{{ message.body|md }}</div>
+    {% if message.role == "assistant" %}
+    <form method="post" action="/ask/{{ thread.id }}/messages/{{ message.id }}/favorite" class="favorite-form">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      {{ favorite_button(message.id in favorite_answers) }}
+    </form>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ol>
+<form method="post" action="/ask/{{ thread.id }}" class="ask ask-page">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <input name="question" type="search" placeholder="Ask a follow-up" aria-label="Follow-up question" required maxlength="500">
+  <button type="submit" aria-label="Ask">→</button>
+</form>
+{% endblock %}

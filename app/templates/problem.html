@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% from "icons.html" import favorite_button %}
+{% block title %}{{ problem.title }} · System Problems{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/problems">System Problems</a> <span>/</span> <span>{{ problem.title }}</span></p>
+<article class="a3">
+  <header class="a3-head">
+    <p class="eyebrow">A3 Report · Problem-Solving Sheet</p>
+    <h1>{{ sheet_title }}</h1>
+    <p class="meta">Theme: {{ problem.title }}{% if problem.source_url %} · <a href="{{ problem.source_url }}">Source</a>{% endif %}</p>
+    <form method="post" action="/problems/{{ problem.id }}/favorite" class="favorite-form">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      {{ favorite_button(favorite) }}
+    </form>
+  </header>
+  <div class="a3-grid">
+    <div class="a3-col">
+      {% for box in a3_boxes[:4] %}
+      <section class="a3-box">
+        <h2>{{ box.title }}</h2>
+        <p class="meta">{{ box.purpose }}</p>
+        {% if box.html %}{{ box.html }}{% else %}<p>Not stated in this case.</p>{% endif %}
+      </section>
+      {% endfor %}
+    </div>
+    <div class="a3-col">
+      {% for box in a3_boxes[4:] %}
+      <section class="a3-box">
+        <h2>{{ box.title }}</h2>
+        <p class="meta">{{ box.purpose }}</p>
+        {% if box.html %}{{ box.html }}{% else %}<p>Not stated in this case.</p>{% endif %}
+      </section>
+      {% endfor %}
+    </div>
+  </div>
+</article>
+<section class="card">
+  <h2>Related patterns</h2>
+  {% if related_patterns %}
+  <ul class="activity-list">
+    {% for pattern in related_patterns %}
+    <li>
+      <a href="/patterns/{{ pattern.category_slug }}/{{ pattern.id }}">{{ pattern.name }}</a>
+      <span class="meta">{{ pattern.category }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="meta">Not related to a pattern yet.</p>
+  {% endif %}
+</section>
+{% if can.edit %}
+<section class="card">
+  <h2>Relate to a pattern</h2>
+  <form method="post" action="/problems/{{ problem.id }}/patterns" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Pattern
+      <select name="pattern_id" required>
+        {% for group in pattern_groups %}
+        <optgroup label="{{ group.title }}">
+          {% for pattern in group.patterns %}
+          <option value="{{ pattern.id }}">{{ pattern.name }}</option>
+          {% endfor %}
+        </optgroup>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit">Relate this problem</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}System Problems · {{ organization }}{% endblock %}
+{% block content %}
+<p class="eyebrow">Problem solving</p>
+<h1>System Problems</h1>
+<p class="lede">These are the system-problem examples already in the library. Each one can be related to any pattern. More examples can be added later.</p>
+{% if problems %}
+<div class="knowledge-grid">
+  {% for problem in problems %}
+  <a class="kcard" href="/problems/{{ problem.id }}">
+    <div class="kcard-art art-{{ loop.cycle('a', 'b', 'c') }}" aria-hidden="true"></div>
+    <div class="kcard-body">
+      <div class="pills">
+        <span class="pill">System problem</span>
+        <span class="pill muted">Existing example</span>
+      </div>
+      <h3>{{ problem.title }}</h3>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<section class="card"><p>No system problems yet.</p></section>
+{% endif %}
+{% endblock %}

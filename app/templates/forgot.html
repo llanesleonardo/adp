@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Reset password · {{ organization }}{% endblock %}
+{% block content %}
+<section class="narrow card">
+  <h1>Reset password</h1>
+  <p>If an account exists, a single-use reset link is sent to the local mailbox until an email provider is configured.</p>
+  <form method="post" action="/forgot-password" class="stack">
+    <label>Email <input name="email" type="email" required></label>
+    <button type="submit">Send reset link</button>
+  </form>
+</section>
+{% endblock %}

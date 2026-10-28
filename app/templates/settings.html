@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<p class="eyebrow">Administration</p>
+<h1>Settings</h1>
+<p class="lede">Choose a page. Publication, the sending address, and the email service are here, with the other administration pages.</p>
+<div class="cats">
+  <a class="cat cat-blue" href="/settings/publication">
+    <span class="cat-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v16H7.5A2.5 2.5 0 0 0 5 20.5V4.5Z"/><path d="M8 7h8M8 11h8"/></svg></span>
+    <strong>Publication</strong>
+    <span>{{ publication.organization_name }}. The public summary site is {{ "on" if publication.public_site_enabled else "off" }}.</span>
+  </a>
+  <a class="cat cat-purple" href="/settings/email">
+    <span class="cat-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16v11H4V7Zm0 0 8 6 8-6"/></svg></span>
+    <strong>Email address</strong>
+    <span>{{ email_settings.sender_email or "No sending address yet" }}</span>
+  </a>
+  <a class="cat cat-green" href="/settings/service">
+    <span class="cat-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16v4H4V7Zm0 6h16v4H4v-4Z"/><path d="M7 9h.01M7 15h.01"/></svg></span>
+    <strong>Email service</strong>
+    <span>{{ "SMTP service" if email_settings.provider == "smtp" else "Local mailbox" }}{% if email_settings.enabled %} · sending on{% else %} · sending off{% endif %}</span>
+  </a>
+  <a class="cat cat-amber" href="/users">
+    <span class="cat-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM5 19.5c.8-3 3.4-4.5 7-4.5s6.2 1.5 7 4.5"/></svg></span>
+    <strong>Users</strong>
+    <span>Accounts and the dashboard for each person.</span>
+  </a>
+  <a class="cat cat-rose" href="/subscribers">
+    <span class="cat-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"/></svg></span>
+    <strong>Subscribers</strong>
+    <span>People who receive the weekly email.</span>
+  </a>
+  <a class="cat cat-blue" href="/outbox">
+    <span class="cat-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16v11H4V7Zm0 0 8 6 8-6"/></svg></span>
+    <strong>Mailbox</strong>
+    <span>Messages kept by the local service.</span>
+  </a>
+  <a class="cat cat-purple" href="/audit">
+    <span class="cat-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h8"/></svg></span>
+    <strong>Audit</strong>
+    <span>The record of changes in the library.</span>
+  </a>
+</div>
+{% endblock %}

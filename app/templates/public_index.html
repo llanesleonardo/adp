@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Public summaries{% endblock %}
+{% block content %}
+<p class="eyebrow">Public</p>
+<h1>Approved summaries</h1>
+<p class="lede">These pages contain only summaries a super admin approved for sharing. Private articles are not included.</p>
+<section class="card">
+  <h2>Weekly email</h2>
+  <p>Get one email a week with this approved public news.</p>
+  <a class="button" href="/subscribe">Subscribe</a>
+</section>
+{% if summaries %}
+<ul class="index">
+  {% for summary in summaries %}
+  <li>
+    <a href="/public/summaries/{{ summary.slug }}">{{ summary.title }}</a>
+    <span class="stamp approved">Approved for public sharing</span>
+    <span class="meta">Version {{ summary.version_number }}</span>
+    <p>{{ summary.excerpt }}</p>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>No public summaries are available.</p>
+{% endif %}
+{% endblock %}

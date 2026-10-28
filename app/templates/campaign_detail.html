@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}{{ campaign.subject }}{% endblock %}
+{% block content %}
+<p class="meta"><a href="/campaigns">All campaigns</a></p>
+<p class="stamp {{ campaign.status }}">{{ campaign.status|label }}</p>
+<h1>{{ campaign.subject }}</h1>
+<p class="meta">{{ campaign.email_type }} · pinned summary versions {{ campaign.summary_version_ids }} · created by user {{ campaign.created_by }}{% if campaign.sent_by %} · sent by user {{ campaign.sent_by }}{% endif %}</p>
+<section class="card">
+  <h2>Included approved versions</h2>
+  {% for item in items %}
+  <article>
+    <h3>{{ item.title }}</h3>
+    <p class="meta">Version {{ item.version_number }}{% if item.outdated %} · possibly outdated{% endif %}</p>
+    <div class="prose">{{ item.body|md }}</div>
+    {% if item.link %}<p>Public link: <a href="{{ item.link }}">{{ item.link }}</a></p>{% endif %}
+  </article>
+  {% endfor %}
+</section>
+{% if campaign.status == "draft" %}
+<form method="post" action="/campaigns/{{ campaign.id }}/preview">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <button type="submit">Preview email</button>
+</form>
+{% endif %}
+{% if preview %}
+<section class="card preview">
+  <h2>Preview</h2>
+  <p><strong>From:</strong> {{ preview.sender }}</p>
+  <p><strong>Subject:</strong> {{ preview.subject }}</p>
+  <p><strong>Recipients:</strong> {{ preview.recipient_count }}</p>
+  {% if preview.warnings %}
+  <ul>{% for warning in preview.warnings %}<li>{{ warning }}</li>{% endfor %}</ul>
+  {% endif %}
+  <h3>Plain text</h3>
+  <pre>{{ preview.text }}</pre>
+  {% if can.send_email %}
+  <form method="post" action="/campaigns/{{ campaign.id }}/send" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="check"><input type="checkbox" name="confirm" value="yes" required> I confirm this send. It will queue email for {{ preview.recipient_count }} recipient{{ "" if preview.recipient_count == 1 else "s" }}.</label>
+    <button type="submit">Queue email</button>
+  </form>
+  {% else %}
+  <p class="banner warn">You cannot send this campaign.</p>
+  {% endif %}
+</section>
+{% endif %}
+{% if deliveries %}
+<section class="card">
+  <h2>Delivery status</h2>
+  <table>
+    <thead><tr><th>Recipient</th><th>Status</th><th>Attempts</th><th>Failure</th><th></th></tr></thead>
+    <tbody>
+      {% for delivery in deliveries %}
+      <tr>
+        <td>{{ delivery.email }}</td>
+        <td>{{ delivery.status|label }}</td>
+        <td>{{ delivery.attempts }}</td>
+        <td>{{ delivery.failure or "" }}</td>
+        <td>
+          {% if can.send_email and delivery.status == "failed" %}
+          <form method="post" action="/campaigns/{{ campaign.id }}/deliveries/{{ delivery.id }}/retry">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <button type="submit" class="ghost">Retry</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

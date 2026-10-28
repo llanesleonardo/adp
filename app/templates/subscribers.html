@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Subscribers{% endblock %}
+{% block content %}
+<div class="page-head">
+  <p class="eyebrow">Administration</p>
+  <h1>Weekly email</h1>
+  <p class="lede">People subscribe for one weekly email of approved public news. Only confirmed addresses receive it. Pending, unsubscribed, and suppressed addresses are left out.</p>
+  <p>
+    <a class="button" href="/campaigns/new?weekly=1">Compose this week's email</a>
+    <a href="/subscribe">Public subscribe page</a>
+  </p>
+</div>
+<p class="meta">
+  {{ subscribers|selectattr("status", "equalto", "subscribed")|list|length }} confirmed
+  · {{ subscribers|selectattr("status", "equalto", "pending")|list|length }} waiting for confirmation
+  · {{ subscribers|selectattr("status", "equalto", "unsubscribed")|list|length }} unsubscribed
+  · {{ subscribers|selectattr("status", "equalto", "suppressed")|list|length }} suppressed
+</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Email</th><th>Status</th><th>Consent</th><th>Confirmed</th><th>Unsubscribed</th><th>Suppression</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for subscriber in subscribers %}
+    <tr>
+      <td>{{ subscriber.email }}</td>
+      <td>{{ subscriber.status|label }}</td>
+      <td>{{ subscriber.consent_source }} {% if subscriber.consent_at %}· {{ subscriber.consent_at }}{% endif %}</td>
+      <td>{{ subscriber.confirmation_at or "—" }}</td>
+      <td>{{ subscriber.unsubscribe_at or "—" }}</td>
+      <td>{{ subscriber.suppression_reason or "" }}</td>
+      <td>
+        {% if subscriber.status != "suppressed" %}
+        <form method="post" action="/subscribers/{{ subscriber.id }}/suppress">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <input name="reason" value="suppressed by administrator" aria-label="Suppression reason">
+          <button type="submit" class="ghost">Suppress</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7">No one has subscribed yet. The public page is /subscribe.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

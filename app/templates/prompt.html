@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ prompt.title }} · Prompt Marketplace{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/prompts">Prompt Marketplace</a> <span>/</span> <span>{{ prompt.title }}</span></p>
+<h1>{{ prompt.title }}</h1>
+<p class="lede">{{ prompt.blurb }} {{ prompt.produces }}</p>
+<section class="card">
+  <form method="get" action="/prompts/{{ prompt.slug }}" class="stack">
+    <label>Category
+      <select name="category">
+        {% for category in categories %}
+        <option value="{{ category.slug }}" {% if category.slug == selected %}selected{% endif %}>{{ category.title }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <p><button type="submit" class="ghost">Show patterns</button></p>
+  </form>
+</section>
+<section class="card">
+  <h2>Build this prompt</h2>
+  <form method="post" action="/prompts/{{ prompt.slug }}" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Pattern
+      <select name="pattern_id" required>
+        {% for item in patterns %}
+        <option value="{{ item.id }}">{{ item.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Focus
+      <input name="focus" maxlength="400" placeholder="The system or decision this prompt is for">
+    </label>
+    {% if prompt.needs_code %}
+    <label>Your code
+      <textarea name="code" rows="12" required maxlength="12000" placeholder="Paste the code this pattern should tackle."></textarea>
+    </label>
+    {% endif %}
+    <p><button type="submit">Build prompt</button></p>
+  </form>
+</section>
+{% if uses %}
+<section class="card">
+  <h2>Your {{ prompt.title|lower }} prompts</h2>
+  <ul class="activity-list">
+    {% for use, pattern in uses %}
+    <li><a href="/prompts/runs/{{ use.id }}">{{ pattern.name }}</a><span class="meta">{{ use.created_at.strftime("%Y-%m-%d %H:%M UTC") }}</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

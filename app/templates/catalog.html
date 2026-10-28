@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }} · {{ organization }}{% endblock %}
+{% block content %}
+<p class="eyebrow">{{ eyebrow }}</p>
+<h1>{{ heading }}</h1>
+<p class="lede">{{ lede }}</p>
+{% if documents %}
+<div class="knowledge-grid">
+  {% for document in documents %}
+  <a class="kcard" href="/documents/{{ document.id }}">
+    <div class="kcard-art art-{{ loop.cycle('a', 'b', 'c') }}" aria-hidden="true"></div>
+    <div class="kcard-body">
+      <div class="pills">
+        <span class="pill">{{ document.status|label }}</span>
+        <span class="pill muted">Version {{ document.version }}</span>
+      </div>
+      <h3>{{ document.title }}</h3>
+      <p>{{ document.body.split('\n')[0][:140] }}</p>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<section class="card"><p>{{ empty }}</p></section>
+{% endif %}
+{% endblock %}

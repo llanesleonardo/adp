@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}New campaign{% endblock %}
+{% block content %}
+{% if weekly %}
+<h1>This week's email</h1>
+<p class="lede">This weekly email goes to every confirmed subscriber. Choose the approved public summaries for this issue.</p>
+{% else %}
+<h1>Compose email</h1>
+<p class="lede">Select one or more approved public summaries. A one-to-one share does not subscribe the recipient.</p>
+{% endif %}
+{% if not summaries %}
+<p class="banner warn">There are no approved public summaries to send.</p>
+{% endif %}
+<form method="post" action="/campaigns" class="card stack">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <label>Subject <input name="subject" required {% if weekly %}value="Weekly knowledge news"{% endif %}></label>
+  <fieldset>
+    <legend>Type</legend>
+    <label class="check"><input type="radio" name="email_type" value="share" {% if not weekly %}checked{% endif %}> Individual share</label>
+    <label class="check"><input type="radio" name="email_type" value="newsletter" {% if weekly %}checked{% endif %}> Weekly email to confirmed subscribers</label>
+  </fieldset>
+  <fieldset>
+    <legend>Approved summaries</legend>
+    {% for summary in summaries %}
+    <label class="check">
+      <input type="checkbox" name="summary_ids" value="{{ summary.id }}">
+      {{ summary.title }} — approved version {{ summary.version_number }}
+      {% if summary.outdated %}(possibly outdated){% endif %}
+    </label>
+    {% endfor %}
+  </fieldset>
+  <label>Share recipients, one email per line
+    <textarea name="recipients" rows="4" placeholder="person@example.com"></textarea>
+  </label>
+  <label class="check"><input type="checkbox" name="audience" value="all_subscribed" {% if weekly %}checked{% endif %}> Send the weekly email to every confirmed subscriber</label>
+  <button type="submit">Create draft</button>
+</form>
+{% endblock %}

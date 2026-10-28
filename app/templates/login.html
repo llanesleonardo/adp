@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Sign in · {{ organization }}{% endblock %}
+{% block content %}
+<section class="narrow card auth-card">
+  <p class="eyebrow">Private library</p>
+  <h1>Sign in</h1>
+  <p class="lede">Published knowledge and management tools are available only to signed-in users.</p>
+  <form method="post" action="/login" class="stack">
+    <label>Email <input name="email" type="email" autocomplete="username" required></label>
+    <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+    <button type="submit">Sign in</button>
+  </form>
+  <p><a href="/forgot-password">Forgot password</a></p>
+</section>
+{% endblock %}

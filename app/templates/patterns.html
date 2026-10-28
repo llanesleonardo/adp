@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% from "icons.html" import category_icon %}
+{% block title %}Explore Patterns · {{ organization }}{% endblock %}
+{% block content %}
+<p class="eyebrow">Library</p>
+<h1>Explore Patterns</h1>
+<p class="lede">Choose a category to see the patterns inside it.</p>
+<div class="cats">
+  {% for category in categories %}
+  <a class="cat cat-{{ category.tone }}" href="/patterns/{{ category.slug }}">
+    <span class="cat-ico" aria-hidden="true">{{ category_icon(category.slug) }}</span>
+    <strong>{{ category.title }}</strong>
+    <span>{{ category.summary }}</span>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}
