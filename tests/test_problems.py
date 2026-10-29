@@ -11,7 +11,7 @@ def test_system_problems_start_from_existing_examples(client, accounts):
     assert "Scaling Ecommerce Notifications" in page.text
     assert "Ticketmaster Style Event Booking" in page.text
     assert "Real Time Updates" not in page.text
-    assert "No system problems yet." not in page.text
+    assert "No problem-solving examples yet." not in page.text
 
     db = client.app.state.session_factory()
     try:

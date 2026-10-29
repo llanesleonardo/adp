@@ -44,13 +44,25 @@ def build_a3(body: str, repository_path: str, pattern_urls: dict[str, str]) -> l
     for key, title, purpose in A3_BOXES:
         parts = grouped[key]
         html = Markup("")
+        markdown = ""
         if parts:
             rendered = []
+            markdown_parts = []
             for heading, section in parts:
                 rendered.append(f"<h3>{_inline(str(escape(heading)))}</h3>")
                 rendered.append(str(render_case_markdown(section)))
+                markdown_parts.append(f"### {heading}\n\n{section}".strip())
             html = Markup("\n".join(rendered))
-        boxes.append({"key": key, "title": title, "purpose": purpose, "html": html})
+            markdown = "\n\n".join(markdown_parts)
+        boxes.append(
+            {
+                "key": key,
+                "title": title,
+                "purpose": purpose,
+                "html": html,
+                "markdown": markdown,
+            }
+        )
     return boxes
 
 

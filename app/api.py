@@ -8,6 +8,7 @@ from app.domain import (
     approve_summary,
     audit_dict,
     campaign_dict,
+    category_by_slug,
     change_password,
     confirm_subscription,
     create_campaign,
@@ -26,18 +27,39 @@ from app.domain import (
     get_ingestion_job,
     get_public_summary,
     get_publication_settings,
+    ask_assistant,
+    assistant_thread_dict,
+    assistant_thread_list_dict,
+    build_prompt_use,
+    exercise_dict,
+    exercise_list_dict,
+    get_assistant_thread,
+    get_exercise,
+    get_prompt_use,
+    get_shared_pattern,
+    get_system_problem,
     job_dict,
+    list_assistant_threads,
     list_audit,
     list_campaigns,
     list_deliveries,
     list_document_summaries,
     list_documents,
+    list_exercise_catalog,
+    list_ingestion_jobs,
     list_outbox,
+    list_pattern_categories,
+    list_prompt_uses,
+    toggle_saved,
     list_public_summaries,
+    list_shared_patterns,
     list_sources,
     list_subscribers,
     list_summaries,
+    list_system_problems,
     list_users,
+    marketplace_prompt_dict,
+    prompt_use_dict,
     login_user,
     logout_session,
     preview_campaign,
@@ -51,7 +73,11 @@ from app.domain import (
     search_documents,
     send_campaign,
     set_document_publication,
+    shared_pattern_dict,
+    shared_pattern_list_dict,
     submit_summary,
+    system_problem_dict,
+    system_problem_list_dict,
     subscribe_address,
     subscriber_dict,
     summary_dict,
@@ -188,6 +214,16 @@ class PublicationIn(BaseModel):
 
 class SuppressIn(BaseModel):
     reason: str = "suppressed by administrator"
+
+
+class PromptBuildIn(BaseModel):
+    pattern_id: int
+    focus: str = ""
+    code: str = ""
+
+
+class AskIn(BaseModel):
+    question: str = Field(min_length=1, max_length=500)
 
 
 def set_session_cookie(response: Response, request: Request, raw_token: str) -> None:
@@ -345,9 +381,152 @@ def search(q: str, user: User = Depends(require_user), db: Session = Depends(get
     return [document_dict(db, row) for row in search_documents(db, user, q)]
 
 
+@router.get("/pattern-categories")
+def pattern_categories(user: User = Depends(require_user), db: Session = Depends(get_db)):
+    return list_pattern_categories(db)
+
+
+@router.get("/pattern-categories/{slug}/patterns")
+def patterns_in_category(slug: str, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    category = category_by_slug(db, slug)
+    return [shared_pattern_list_dict(row) for row in list_shared_patterns(db, category["slug"])]
+
+
+@router.get("/pattern-categories/{slug}/patterns/{pattern_id}")
+def pattern_detail(
+    slug: str,
+    pattern_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    category = category_by_slug(db, slug)
+    pattern = get_shared_pattern(db, pattern_id, category["slug"])
+    return shared_pattern_dict(db, user, pattern)
+
+
+@router.get("/problems")
+def problems(user: User = Depends(require_user), db: Session = Depends(get_db)):
+    return [system_problem_list_dict(db, user, row) for row in list_system_problems(db)]
+
+
+@router.get("/problems/{problem_id}")
+def problem_detail(problem_id: int, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    return system_problem_dict(db, user, get_system_problem(db, problem_id))
+
+
+@router.get("/exercises")
+def exercises(user: User = Depends(require_user), db: Session = Depends(get_db)):
+    return [
+        exercise_list_dict(exercise, attempt, patterns, technologies)
+        for exercise, attempt, patterns, technologies in list_exercise_catalog(db, user)
+    ]
+
+
+@router.get("/exercises/{exercise_id}")
+def exercise_detail(exercise_id: int, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    return exercise_dict(db, user, get_exercise(db, exercise_id))
+
+
+@router.get("/prompts")
+def prompts(user: User = Depends(require_user), db: Session = Depends(get_db)):
+    from app.prompts import list_prompts
+
+    return {
+        "prompts": [marketplace_prompt_dict(item) for item in list_prompts()],
+        "recent_uses": [
+            prompt_use_dict(use, pattern) for use, pattern in list_prompt_uses(db, user)
+        ],
+    }
+
+
+@router.get("/prompts/uses/{use_id}")
+def prompt_use_detail(use_id: int, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    use, pattern = get_prompt_use(db, user, use_id)
+    return prompt_use_dict(use, pattern)
+
+
+@router.get("/prompts/{slug}")
+def prompt_detail(slug: str, category: str | None = None, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    from app.prompts import prompt_by_slug
+
+    spec = prompt_by_slug(slug)
+    if spec is None:
+        from app.errors import NotFound
+
+        raise NotFound()
+    categories = list_pattern_categories(db)
+    selected = category or ""
+    if not any(item["slug"] == selected for item in categories):
+        selected = categories[0]["slug"] if categories else ""
+    return {
+        **marketplace_prompt_dict(spec),
+        "selected_category": selected,
+        "categories": categories,
+        "patterns": [shared_pattern_list_dict(row) for row in list_shared_patterns(db, selected)] if selected else [],
+        "recent_uses": [
+            prompt_use_dict(use, pattern) for use, pattern in list_prompt_uses(db, user, slug)
+        ],
+    }
+
+
+@router.post("/prompts/{slug}/uses", status_code=201)
+def prompt_build(slug: str, body: PromptBuildIn, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    use = build_prompt_use(db, user, slug, body.pattern_id, body.focus, body.code)
+    use, pattern = get_prompt_use(db, user, use.id)
+    return prompt_use_dict(use, pattern)
+
+
 @router.post("/retrieval")
 def retrieval(body: RetrievalIn, user: User = Depends(require_user), db: Session = Depends(get_db)):
     return {"results": retrieve_passages(db, user, body.query)}
+
+
+@router.get("/ask/threads")
+def ask_threads(user: User = Depends(require_user), db: Session = Depends(get_db)):
+    return [assistant_thread_list_dict(row) for row in list_assistant_threads(db, user)]
+
+
+@router.post("/ask/threads", status_code=201)
+def ask_create_thread(body: AskIn, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    thread = ask_assistant(db, user, body.question)
+    thread, messages = get_assistant_thread(db, user, thread.id)
+    return assistant_thread_dict(db, user, thread, messages)
+
+
+@router.get("/ask/threads/{thread_id}")
+def ask_thread_detail(thread_id: int, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    thread, messages = get_assistant_thread(db, user, thread_id)
+    return assistant_thread_dict(db, user, thread, messages)
+
+
+@router.post("/ask/threads/{thread_id}/messages", status_code=201)
+def ask_follow_up(thread_id: int, body: AskIn, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    thread = ask_assistant(db, user, body.question, thread_id)
+    thread, messages = get_assistant_thread(db, user, thread.id)
+    return assistant_thread_dict(db, user, thread, messages)
+
+
+@router.post("/ask/threads/{thread_id}/messages/{message_id}/favorite")
+def ask_favorite_message(
+    thread_id: int,
+    message_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    thread, messages = get_assistant_thread(db, user, thread_id)
+    message = next((row for row in messages if row.id == message_id), None)
+    if message is None or message.role != "assistant":
+        from app.errors import NotFound
+
+        raise NotFound()
+    toggle_saved(db, user, "answer", message.id)
+    thread, messages = get_assistant_thread(db, user, thread_id)
+    return assistant_thread_dict(db, user, thread, messages)
+
+
+@router.get("/ingest/jobs")
+def ingest_jobs(user: User = Depends(require_user), db: Session = Depends(get_db)):
+    return [job_dict(row) for row in list_ingestion_jobs(db, user)]
 
 
 @router.post("/ingest/jobs", status_code=201)

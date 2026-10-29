@@ -2716,6 +2716,174 @@ def document_dict(db: Session, document: Document) -> dict:
     }
 
 
+def shared_pattern_list_dict(pattern: SharedPattern) -> dict:
+    return {
+        "id": pattern.id,
+        "name": pattern.name,
+        "subcategory": pattern.subcategory or "",
+        "category": pattern.category,
+        "category_slug": pattern.category_slug,
+    }
+
+
+def shared_pattern_dict(db: Session, actor: User, pattern: SharedPattern) -> dict:
+    show_concerns = pattern_has_concerns(pattern)
+    return {
+        "id": pattern.id,
+        "name": pattern.name,
+        "subcategory": pattern.subcategory or "",
+        "category": pattern.category,
+        "category_slug": pattern.category_slug,
+        "source_url": pattern.source_url or "",
+        "repository_path": pattern.repository_path or "",
+        "favorite": is_saved(db, actor, "pattern", pattern.id),
+        "show_concerns": show_concerns,
+        "sources": [
+            {"id": source.id, "label": source.label, "url": source.url}
+            for source in list_pattern_sources(db, pattern.id)
+        ],
+        "concerns": (
+            [{"id": concern.id, "title": concern.title} for concern in list_pattern_concerns(db, pattern.id)]
+            if show_concerns
+            else []
+        ),
+        "problems": [
+            {"id": problem.id, "title": problem.title} for problem in list_related_problems(db, pattern.id)
+        ],
+        "exercises": [
+            {
+                "id": exercise.id,
+                "title": exercise.title,
+                "kind": exercise.kind,
+                "kind_label": exercise_kind_label(exercise.kind),
+            }
+            for exercise in list_pattern_exercises(db, pattern.id)
+        ],
+    }
+
+
+def exercise_kind_label(kind: str) -> str:
+    if kind == "practice":
+        return "Match and questions"
+    if kind == "diagram":
+        return "Build the diagram"
+    return "Prompt"
+
+
+def exercise_list_dict(
+    exercise: Exercise,
+    attempt: ExerciseAttempt | None,
+    patterns: list[SharedPattern],
+    technologies: list[str],
+) -> dict:
+    return {
+        "id": exercise.id,
+        "title": exercise.title,
+        "kind": exercise.kind,
+        "kind_label": exercise_kind_label(exercise.kind),
+        "attempt_status": attempt.status if attempt is not None else None,
+        "technologies": list(technologies),
+        "patterns": [shared_pattern_list_dict(pattern) for pattern in patterns],
+    }
+
+
+def exercise_dict(db: Session, actor: User, exercise: Exercise) -> dict:
+    catalog = {row[0].id: row for row in list_exercise_catalog(db, actor)}
+    _exercise, attempt, patterns, technologies = catalog.get(
+        exercise.id, (exercise, None, [], [])
+    )
+    board = practice_view(exercise) or diagram_view(exercise)
+    note = exercise_note(db, actor, exercise.id)
+    return {
+        "id": exercise.id,
+        "title": exercise.title,
+        "kind": exercise.kind,
+        "kind_label": exercise_kind_label(exercise.kind),
+        "prompt": exercise.prompt or "",
+        "favorite": is_saved(db, actor, "exercise", exercise.id),
+        "attempt": (
+            None
+            if attempt is None
+            else {
+                "status": attempt.status,
+                "started_at": iso(attempt.started_at),
+                "updated_at": iso(attempt.updated_at),
+            }
+        ),
+        "technologies": list(technologies),
+        "patterns": [shared_pattern_list_dict(pattern) for pattern in patterns],
+        "board": board,
+        "report": exercise_report(db, actor, exercise),
+        "note": note.body if note and note.body else "",
+    }
+
+
+def marketplace_prompt_dict(spec: dict) -> dict:
+    return {
+        "slug": spec["slug"],
+        "title": spec["title"],
+        "blurb": spec["blurb"],
+        "produces": spec["produces"],
+        "needs_code": bool(spec.get("needs_code")),
+    }
+
+
+def prompt_use_dict(use: PromptUse, pattern: SharedPattern, spec: dict | None = None) -> dict:
+    from app.prompts import prompt_by_slug
+
+    catalog = spec or prompt_by_slug(use.slug) or {
+        "slug": use.slug,
+        "title": use.slug,
+        "produces": "",
+        "needs_code": False,
+    }
+    return {
+        "id": use.id,
+        "slug": use.slug,
+        "title": catalog.get("title") or use.slug,
+        "produces": catalog.get("produces") or "",
+        "needs_code": bool(catalog.get("needs_code")),
+        "focus": use.focus or "",
+        "has_code": bool((use.code or "").strip()),
+        "body": use.body or "",
+        "pattern": shared_pattern_list_dict(pattern),
+        "created_at": iso(use.created_at),
+    }
+
+
+def system_problem_list_dict(db: Session, actor: User, problem: SystemProblem) -> dict:
+    return {
+        "id": problem.id,
+        "title": problem.title,
+        "source_url": problem.source_url or "",
+        "favorite": is_saved(db, actor, "problem", problem.id),
+    }
+
+
+def system_problem_dict(db: Session, actor: User, problem: SystemProblem) -> dict:
+    sheet_title, a3_boxes = a3_for_problem(db, problem)
+    return {
+        "id": problem.id,
+        "title": problem.title,
+        "sheet_title": sheet_title,
+        "source_url": problem.source_url or "",
+        "repository_path": problem.repository_path or "",
+        "origin": problem.origin or "",
+        "favorite": is_saved(db, actor, "problem", problem.id),
+        "a3": [
+            {
+                "key": box["key"],
+                "title": box["title"],
+                "purpose": box["purpose"],
+                "html": str(box.get("html") or ""),
+                "markdown": box.get("markdown") or "",
+            }
+            for box in a3_boxes
+        ],
+        "related_patterns": [shared_pattern_list_dict(row) for row in list_related_patterns(db, problem.id)],
+    }
+
+
 def _campaign_or_404(db: Session, campaign_id: int) -> EmailCampaign:
     campaign = db.get(EmailCampaign, campaign_id)
     if campaign is None:
@@ -3395,8 +3563,41 @@ def job_dict(job: IngestionJob) -> dict:
         "id": job.id,
         "status": job.status,
         "title": job.title,
+        "body": job.body or "",
+        "source_label": job.source_label or "",
+        "source_url": job.source_url or "",
+        "publish": bool(job.publish),
         "document_id": job.document_id,
         "error": job.error,
         "created_at": iso(job.created_at),
         "finished_at": iso(job.finished_at),
+    }
+
+
+def assistant_thread_list_dict(thread: AssistantThread) -> dict:
+    return {
+        "id": thread.id,
+        "title": thread.title,
+        "created_at": iso(thread.created_at),
+        "updated_at": iso(thread.updated_at),
+    }
+
+
+def assistant_message_dict(db: Session, actor: User, message: AssistantMessage) -> dict:
+    return {
+        "id": message.id,
+        "thread_id": message.thread_id,
+        "role": message.role,
+        "body": message.body,
+        "created_at": iso(message.created_at),
+        "favorite": (
+            is_saved(db, actor, "answer", message.id) if message.role == "assistant" else False
+        ),
+    }
+
+
+def assistant_thread_dict(db: Session, actor: User, thread: AssistantThread, messages: list[AssistantMessage]) -> dict:
+    return {
+        **assistant_thread_list_dict(thread),
+        "messages": [assistant_message_dict(db, actor, message) for message in messages],
     }

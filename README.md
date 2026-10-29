@@ -53,3 +53,11 @@ A share is a one-to-one message and does not subscribe the recipient. A newslett
 ```powershell
 .\.venv\Scripts\python -m pytest
 ```
+
+## iPhone app
+
+The native SwiftUI client lives next to other Xcode projects:
+
+`/Volumes/WDBLACKSATECHI/Code/SWIFT/adp-mobile`
+
+Open `ADP.xcodeproj` in Xcode. See that folder’s README for Cursor + Simulator steps.
